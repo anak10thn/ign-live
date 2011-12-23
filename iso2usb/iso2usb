@@ -1,0 +1,22 @@
+#!/bin/bash
+
+ISO=`zenity --file-selection --title="Pilih berkas image Igos Nusantara" --file-filter "*.ISO"`
+
+case $? in
+	0)
+		echo 'zenity --width 600 --height 300 --list --title "Pilih Partisi" --text="Pilih Partisi Target Untuk Live USB IGN" --column="Partisi" --column="Keterangan" \'>/tmp/.PARTISI
+		beesu fdisk -l |grep "FAT32"| egrep -o "/dev/[a-z]+[1-9]" |uniq >/tmp/.DETECT
+		while read PART
+		do
+			echo "\"$PART\" \"Pilih partisi $PART sebagai Live USB iGN\"" >>/tmp/.PARTISI
+		done </tmp/.DETECT
+		chmod 777 /tmp/.PARTISI
+		PARTISI=`/tmp/.PARTISI`
+		beesu livecd-iso-to-disk --format --msdos --noverify --reset-mbr $ISO $PARTISI
+
+		zenity --info --text="Live Usb sudah di buat!";;
+	1)
+		zenity --error --text="Anda belum memilih!";;
+	-1)
+		zenity --error --text="Anda belum memilih!";;
+esac
